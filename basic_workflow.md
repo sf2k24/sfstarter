@@ -189,7 +189,7 @@ This setup provides a comprehensive implementation of the functionalities for th
 
 
   ```apex
-trigger UpdateAccountPaymentsAndRejectedServices on Service__c (after insert, after update, after delete, after undelete) {
+trigger UpdateAccountStats on Service__c (after insert, after update, after delete, after undelete) {
     // Step 1: Gather Account IDs affected by the trigger
     Set<Id> accountIds = new Set<Id>();
 
@@ -227,9 +227,18 @@ trigger UpdateAccountPaymentsAndRejectedServices on Service__c (after insert, af
             GROUP BY Account__c
         ];
 
+        // Count of Unique Vehicles Serviced
+        AggregateResult[] vehicleCounts = [
+            SELECT Account__c, COUNT_DISTINCT(Vehicle__c) vehicleCount
+            FROM Service__c
+            WHERE Account__c IN :accountIds AND Status__c = 'Accepted'
+            GROUP BY Account__c
+        ];
+
         // Step 3: Map results to Account objects
         Map<Id, Account> accountsToUpdate = new Map<Id, Account>();
 
+        // Update Total Payments
         for (AggregateResult ar : paymentResults) {
             Id accountId = (Id) ar.get('Account__c');
             Decimal totalPayments = (Decimal) ar.get('totalPayments');
@@ -240,6 +249,7 @@ trigger UpdateAccountPaymentsAndRejectedServices on Service__c (after insert, af
             accountsToUpdate.get(accountId).Total_Payments__c = totalPayments;
         }
 
+        // Update Rejected Services Count
         for (AggregateResult ar : rejectedServiceResults) {
             Id accountId = (Id) ar.get('Account__c');
             Integer rejectedCount = (Integer) ar.get('rejectedCount');
@@ -250,7 +260,18 @@ trigger UpdateAccountPaymentsAndRejectedServices on Service__c (after insert, af
             accountsToUpdate.get(accountId).Rejected_Services_Count__c = rejectedCount;
         }
 
-        // Step 4: Update Accounts with new Total Payments and Rejected Services Count
+        // Update Unique Vehicles Serviced Count
+        for (AggregateResult ar : vehicleCounts) {
+            Id accountId = (Id) ar.get('Account__c');
+            Integer vehicleCount = (Integer) ar.get('vehicleCount');
+
+            if (!accountsToUpdate.containsKey(accountId)) {
+                accountsToUpdate.put(accountId, new Account(Id = accountId));
+            }
+            accountsToUpdate.get(accountId).Vehicles_Serviced_Count__c = vehicleCount;
+        }
+
+        // Step 4: Update Accounts with new Total Payments, Rejected Services Count, and Vehicles Serviced Count
         update accountsToUpdate.values();
     }
 }
