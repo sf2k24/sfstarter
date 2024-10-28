@@ -185,3 +185,74 @@ Salesforce's reporting and dashboard features handle sales metrics such as total
     - Design dashboards to visualize the aggregated report data.
 
 This setup provides a comprehensive implementation of the functionalities for the **Vehicle Service Station App** using **Apex**, ensuring both data accuracy and ease of use across various user roles.
+
+
+
+  ```apex
+trigger UpdateAccountPaymentsAndRejectedServices on Service__c (after insert, after update, after delete, after undelete) {
+    // Step 1: Gather Account IDs affected by the trigger
+    Set<Id> accountIds = new Set<Id>();
+
+    if (Trigger.isDelete) {
+        // When records are deleted, use Trigger.old to get account IDs
+        for (Service__c service : Trigger.old) {
+            if (service.Account__c != null) {
+                accountIds.add(service.Account__c);
+            }
+        }
+    } else {
+        // For insert, update, and undelete, use Trigger.new to get account IDs
+        for (Service__c service : Trigger.new) {
+            if (service.Account__c != null) {
+                accountIds.add(service.Account__c);
+            }
+        }
+    }
+
+    if (!accountIds.isEmpty()) {
+        // Step 2: Aggregate Total Payments and Count of Rejected Services
+        // Total Payments: Sum of Payment Amount for each Account where Status is "Accepted"
+        AggregateResult[] paymentResults = [
+            SELECT Account__c, SUM(Payment_Amount__c) totalPayments
+            FROM Service__c
+            WHERE Account__c IN :accountIds AND Status__c = 'Accepted'
+            GROUP BY Account__c
+        ];
+
+        // Count of Rejected Services
+        AggregateResult[] rejectedServiceResults = [
+            SELECT Account__c, COUNT(Id) rejectedCount
+            FROM Service__c
+            WHERE Account__c IN :accountIds AND Status__c = 'Rejected'
+            GROUP BY Account__c
+        ];
+
+        // Step 3: Map results to Account objects
+        Map<Id, Account> accountsToUpdate = new Map<Id, Account>();
+
+        for (AggregateResult ar : paymentResults) {
+            Id accountId = (Id) ar.get('Account__c');
+            Decimal totalPayments = (Decimal) ar.get('totalPayments');
+
+            if (!accountsToUpdate.containsKey(accountId)) {
+                accountsToUpdate.put(accountId, new Account(Id = accountId));
+            }
+            accountsToUpdate.get(accountId).Total_Payments__c = totalPayments;
+        }
+
+        for (AggregateResult ar : rejectedServiceResults) {
+            Id accountId = (Id) ar.get('Account__c');
+            Integer rejectedCount = (Integer) ar.get('rejectedCount');
+
+            if (!accountsToUpdate.containsKey(accountId)) {
+                accountsToUpdate.put(accountId, new Account(Id = accountId));
+            }
+            accountsToUpdate.get(accountId).Rejected_Services_Count__c = rejectedCount;
+        }
+
+        // Step 4: Update Accounts with new Total Payments and Rejected Services Count
+        update accountsToUpdate.values();
+    }
+}
+```
+
