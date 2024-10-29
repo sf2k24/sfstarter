@@ -6,26 +6,45 @@ Here’s a professional, streamlined summary of the Apex code for the Vehicle Se
 
 ```apex
 trigger UpdateAccountStats on Service__c (after insert, after update, after delete) {
+    // Get all unique Account IDs associated with the services being modified
     Set<Id> accountIds = new Set<Id>();
     for (Service__c service : Trigger.isDelete ? Trigger.old : Trigger.new) {
         if (service.Account__c != null) accountIds.add(service.Account__c);
     }
     
-    List<Account> accountsToUpdate = new List<Account>();
-    for (AggregateResult result : [SELECT Account__c Id, 
-                                         SUM(Payment__c) totalPayments, 
-                                         COUNT(Id) totalServices, 
-                                         COUNT(CASE WHEN Status__c = 'Rejected' THEN 1 END) rejectedServices 
-                                    FROM Service__c 
-                                    WHERE Account__c IN :accountIds 
-                                    GROUP BY Account__c]) {
-        Account acc = new Account(Id = (Id)result.get('Id'));
-        acc.Total_Payments__c = (Decimal)result.get('totalPayments');
-        acc.Total_Services__c = (Integer)result.get('totalServices');
-        acc.Rejected_Services__c = (Integer)result.get('rejectedServices');
-        accountsToUpdate.add(acc);
+    // Query for all related services, including accepted and rejected
+    Map<Id, Account> accountsToUpdate = new Map<Id, Account>();
+    for (Service__c service : [
+        SELECT Account__c, Payment__c, Status__c
+        FROM Service__c
+        WHERE Account__c IN :accountIds
+    ]) {
+        // Get or initialize the account in the map
+        if (!accountsToUpdate.containsKey(service.Account__c)) {
+            accountsToUpdate.put(service.Account__c, new Account(
+                Id = service.Account__c,
+                Total_Payments__c = 0,
+                Total_Services__c = 0,
+                Rejected_Services__c = 0
+            ));
+        }
+        
+        Account acc = accountsToUpdate.get(service.Account__c);
+        
+        // Add to total payments if service is accepted
+        if (service.Status__c == 'Accepted') {
+            acc.Total_Payments__c += service.Payment__c != null ? service.Payment__c : 0;
+        }
+        
+        // Count total services and rejected services
+        acc.Total_Services__c++;
+        if (service.Status__c == 'Rejected') {
+            acc.Rejected_Services__c++;
+        }
     }
-    update accountsToUpdate;
+    
+    // Update all accounts with the aggregated values
+    update accountsToUpdate.values();
 }
 ```
 
