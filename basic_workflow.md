@@ -149,3 +149,65 @@ trigger PreventDuplicateVehicles on Vehicle__c (before insert, before update) {
 ---
 
 This concise code and structure follow best practices, ensuring efficient data management and trigger performance. Each trigger is lean, focused, and handles necessary business logic without overlap.
+
+
+To create reports in Salesforce for your Vehicle Service Station app, you’ll need to set up custom report types, create specific reports based on your requirements, and, if desired, build dashboards to visualize your data. Here’s a step-by-step guide:
+
+### Step 1: Create a Custom Report Type
+
+1. **Navigate to Setup**:
+   - Go to **Setup** → **Report Types**.
+2. **Create a New Report Type**:
+   - Click **New Custom Report Type**.
+   - Select **Primary Object** based on your needs, such as `Service__c` for service-related data or `Vehicle__c` for vehicle-specific data.
+   - Give it a name, description, and select **Deployment Status** as "Deployed."
+   - Define Relationships:
+     - To include related objects, add child objects like `Vehicle__c` and `Account` to create comprehensive reports.
+3. **Save the Report Type**.
+
+### Step 2: Create Individual Reports
+
+#### 1. **Sales by Month Report**
+
+   - Go to **Reports** and click **New Report**.
+   - Choose the custom report type you created that includes `Service__c`.
+   - **Filters**:
+     - Add a filter for `Service Date` to group services by month.
+   - **Group by**:
+     - Group the data by `Service Date` (set the time interval to "Calendar Month").
+   - **Summarize**:
+     - Add a summary field to calculate **Total Payments**.
+   - Save the report with a descriptive name like **Sales by Month Report**.
+
+#### 2. **Sales by Area Report**
+
+   - Create a new report using the same custom report type.
+   - **Filters**:
+     - Add a filter for the `Account Billing Address` or `Contact Address` to group data by area.
+   - **Group by**:
+     - Group data by the `Billing City` or relevant field for geographical grouping.
+   - Save the report with a name like **Sales by Area Report**.
+
+#### 3. **Sales by Salesperson Report**
+
+   - Create a new report using the custom report type.
+   - **Filters**:
+     - You may add a filter for the salesperson’s name or lookup field if this data is stored on `Service__c` or `Account`.
+   - **Group by**:
+     - Group by `Owner Name` or a custom field indicating the salesperson.
+   - Save as **Sales by Salesperson Report**.
+
+### Step 3: Build a Dashboard for Visualization (Optional)
+
+1. **Go to Dashboards** and click **New Dashboard**.
+2. **Add Components**:
+   - Use the reports you created above as data sources.
+   - For each report, add a dashboard component like a **Bar Chart** for monthly sales, a **Donut Chart** for area-based sales, and a **Table** or **Pie Chart** for sales by salesperson.
+3. **Customize and Save** the dashboard with a name like **Vehicle Service Station Overview**.
+
+### Step 4: Run and Share Reports
+
+1. **Run Reports**: Go to the **Reports** tab to view and run each report.
+2. **Schedule or Share**: Use the **Schedule Future Runs** option to set up regular report deliveries to specific users or groups.
+
+This setup allows you to view data such as monthly sales, geographic sales distribution, and sales performance by salesperson, all in one place.
