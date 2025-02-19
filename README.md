@@ -2,25 +2,27 @@
 
 return (
   (!normalizedFilter.disputeServiceItem ||
-    (Array.isArray(normalizedFilter.disputeServiceItem) &&
-      normalizedFilter.disputeServiceItem.some(
-        (item) => data?.disputedSerVItem?.toLowerCase() === item.toLowerCase()
-      ))) &&
+    data?.disputedSerVItem?.some(item =>
+      item.toLowerCase().includes(normalizedFilter.disputeServiceItem.toLowerCase())
+    )) &&
   (!normalizedFilter.locationOfService ||
-    (Array.isArray(normalizedFilter.locationOfService) &&
-      normalizedFilter.locationOfService.some(
-        (item) => data?.locationOfService?.toLowerCase() === item.toLowerCase()
-      ))) &&
+    (Array.isArray(data?.locationOfService)
+      ? data.locationOfService.some(item =>
+          item.toLowerCase().includes(normalizedFilter.locationOfService.toLowerCase())
+        )
+      : data?.locationOfService?.toLowerCase().includes(normalizedFilter.locationOfService.toLowerCase()))) &&
   (!normalizedFilter.processType ||
-    (Array.isArray(normalizedFilter.processType) &&
-      normalizedFilter.processType.some(
-        (item) => data?.processType?.toLowerCase() === item.toLowerCase()
-      ))) &&
+    (Array.isArray(data?.processType)
+      ? data.processType.some(item =>
+          item.toLowerCase().includes(normalizedFilter.processType.toLowerCase())
+        )
+      : data?.processType?.toLowerCase().includes(normalizedFilter.processType.toLowerCase()))) &&
   (!normalizedFilter.flags ||
-    (Array.isArray(normalizedFilter.flags) &&
-      normalizedFilter.flags.some(
-        (item) => data?.flags?.toLowerCase() === item.toLowerCase()
-      )))
+    (Array.isArray(data?.flags)
+      ? data.flags.some(item =>
+          item.toLowerCase().includes(normalizedFilter.flags.toLowerCase())
+        )
+      : data?.flags?.toLowerCase().includes(normalizedFilter.flags.toLowerCase())))
 );
 
 
