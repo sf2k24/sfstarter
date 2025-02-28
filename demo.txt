@@ -1,0 +1,115 @@
+<div class="table-container">
+  <!-- Custom Pagination Controls -->
+  <div class="paginator-container">
+    <!-- Previous Button -->
+    <button mat-button (click)="previousPage()" [disabled]="!hasPreviousPage()">
+      ⬅ Previous
+    </button>
+
+    <!-- Page Buttons -->
+    <button *ngFor="let page of getPages()"
+            mat-button
+            [class.active]="page === currentPage"
+            (click)="goToPage(page)">
+      {{ page + 1 }}
+    </button>
+
+    <!-- Next Button -->
+    <button mat-button (click)="nextPage()" [disabled]="!hasNextPage()">
+      Next ➡
+    </button>
+  </div>
+
+  <!-- Material Paginator (Hidden but Active) -->
+  <mat-paginator #paginator
+                 [length]="length"
+                 [pageSize]="pageSize"
+                 [pageSizeOptions]="[10, 20, 30]"
+                 (page)="onPageChange($event)">
+  </mat-paginator>
+</div>
+
+
+import { Component, ViewChild, AfterViewInit } from '@angular/core';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
+
+@Component({
+  selector: 'app-root',
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.css']
+})
+export class AppComponent implements AfterViewInit {
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  length = 100; // Total number of items
+  pageSize = 10; // Items per page
+  currentPage = 0;
+
+  ngAfterViewInit() {
+    this.updateTotalPages();
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.length / this.pageSize);
+  }
+
+  getPages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i);
+  }
+
+  goToPage(index: number): void {
+    if (this.paginator && index >= 0 && index < this.totalPages) {
+      this.paginator.pageIndex = index;
+      this.currentPage = index;
+      this.paginator._changePageSize(this.paginator.pageSize); // Force page update
+    }
+  }
+
+  previousPage(): void {
+    if (this.hasPreviousPage()) {
+      this.goToPage(this.currentPage - 1);
+    }
+  }
+
+  nextPage(): void {
+    if (this.hasNextPage()) {
+      this.goToPage(this.currentPage + 1);
+    }
+  }
+
+  hasPreviousPage(): boolean {
+    return this.currentPage > 0;
+  }
+
+  hasNextPage(): boolean {
+    return this.currentPage < this.totalPages - 1;
+  }
+
+  onPageChange(event: PageEvent) {
+    this.currentPage = event.pageIndex;
+  }
+
+  updateTotalPages() {
+    this.currentPage = 0;
+  }
+}
+
+
+.paginator-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+button.active {
+  font-weight: bold;
+  background-color: #1976d2;
+  color: white;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
