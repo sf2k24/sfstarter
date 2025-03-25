@@ -1,19 +1,33 @@
-const total = this.totalPages;
-  const maxVisiblePages = 10; // Maximum number of page buttons before showing '...'
-  
-  if (total <= maxVisiblePages) return Array.from({ length: total }, (_, i) => i);
-
+ const total = this.totalPages;
+  const maxVisible = 10; // Maximum number of visible page buttons at any time
   const pages: (number | string)[] = [];
 
-  // Always include first 10 pages
-  for (let i = 0; i < Math.min(10, total); i++) {
+  if (total <= maxVisible) {
+    return Array.from({ length: total }, (_, i) => i);
+  }
+
+  // Always show first few pages
+  pages.push(0, 1, 2);
+
+  // Dynamic middle pages
+  if (this.currentPage > 5) {
+    pages.push('...');
+  }
+
+  // Determine dynamic window of pages
+  let start = Math.max(3, this.currentPage - 2);
+  let end = Math.min(total - 3, this.currentPage + 2);
+
+  for (let i = start; i <= end; i++) {
     pages.push(i);
   }
 
-  // Add ellipsis if there are more pages beyond 10
-  if (total > maxVisiblePages) {
+  // Show trailing ellipsis if needed
+  if (this.currentPage < total - 6) {
     pages.push('...');
-    pages.push(total - 1); // Ensure the last page is always visible
   }
+
+  // Always show the last two pages
+  pages.push(total - 2, total - 1);
 
   return pages;
