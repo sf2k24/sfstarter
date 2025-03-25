@@ -1,93 +1,19 @@
-import { Component, ViewChild, AfterViewInit } from '@angular/core';
-import { MatPaginator, PageEvent } from '@angular/material/paginator';
+const total = this.totalPages;
+  const maxVisiblePages = 10; // Maximum number of page buttons before showing '...'
+  
+  if (total <= maxVisiblePages) return Array.from({ length: total }, (_, i) => i);
 
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
-})
-export class AppComponent implements AfterViewInit {
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  const pages: (number | string)[] = [];
 
-  length = 100; // Total number of items
-  pageSize = 10; // Items per page
-  currentPage = 0;
-
-  ngAfterViewInit() {
-    this.paginator.page.subscribe((event: PageEvent) => this.onPageChange(event));
+  // Always include first 10 pages
+  for (let i = 0; i < Math.min(10, total); i++) {
+    pages.push(i);
   }
 
-  get totalPages(): number {
-    return Math.ceil(this.length / this.pageSize);
+  // Add ellipsis if there are more pages beyond 10
+  if (total > maxVisiblePages) {
+    pages.push('...');
+    pages.push(total - 1); // Ensure the last page is always visible
   }
 
-  getPages(): number[] {
-    const pages = [];
-    const total = this.totalPages;
-
-    if (total <= 5) return Array.from({ length: total }, (_, i) => i);
-
-    if (this.currentPage < 3) {
-      pages.push(0, 1, 2, '...', total - 1);
-    } else if (this.currentPage > total - 4) {
-      pages.push(0, '...', total - 3, total - 2, total - 1);
-    } else {
-      pages.push(0, '...', this.currentPage - 1, this.currentPage, this.currentPage + 1, '...', total - 1);
-    }
-    return pages;
-  }
-
-  goToPage(index: number): void {
-    if (typeof index === 'number' && index >= 0 && index < this.totalPages) {
-      this.paginator.pageIndex = index;
-      this.currentPage = index;
-      this.paginator._changePageSize(this.paginator.pageSize);
-    }
-  }
-
-  previousPage(): void {
-    if (this.hasPreviousPage()) this.goToPage(this.currentPage - 1);
-  }
-
-  nextPage(): void {
-    if (this.hasNextPage()) this.goToPage(this.currentPage + 1);
-  }
-
-  hasPreviousPage(): boolean {
-    return this.currentPage > 0;
-  }
-
-  hasNextPage(): boolean {
-    return this.currentPage < this.totalPages - 1;
-  }
-
-  onPageChange(event: PageEvent) {
-    this.currentPage = event.pageIndex;
-  }
-}
-
-
-
-<div class="table-container">
-  <div class="paginator-container">
-    <button mat-button (click)="previousPage()" [disabled]="!hasPreviousPage()">⬅ Previous</button>
-
-    <button *ngFor="let page of getPages()" 
-            mat-button 
-            [class.active]="page === currentPage"
-            (click)="goToPage(page)" 
-            *ngIf="page !== '...'">
-      {{ page + 1 }}
-    </button>
-    <span *ngFor="let page of getPages()" *ngIf="page === '...'">...</span>
-
-    <button mat-button (click)="nextPage()" [disabled]="!hasNextPage()">Next ➡</button>
-  </div>
-
-  <mat-paginator #paginator
-                 [length]="length"
-                 [pageSize]="pageSize"
-                 [pageSizeOptions]="[10, 20, 30]"
-                 (page)="onPageChange($event)">
-  </mat-paginator>
-</div>
+  return pages;
