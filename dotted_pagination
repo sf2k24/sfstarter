@@ -1,33 +1,49 @@
- const total = this.totalPages;
-  const maxVisible = 10; // Maximum number of visible page buttons at any time
-  const pages: (number | string)[] = [];
+const fs = require('fs');
+const csv = require('csv-parser');
 
-  if (total <= maxVisible) {
-    return Array.from({ length: total }, (_, i) => i);
-  }
+const parentOrgFile = 'parent_organization.csv';
+const contactNumFile = 'contact_num.csv';
+const errorCodesFile = 'error_codes.csv';
+const outputFile = 'output.json';
 
-  // Always show first few pages
-  pages.push(0, 1, 2);
+function readCSV(filePath, transformRow = (row) => row) {
+    return new Promise((resolve, reject) => {
+        const data = [];
+        let isFirstRow = true;
+        fs.createReadStream(filePath)
+            .pipe(csv())
+            .on('data', (row) => {
+                if (isFirstRow) {
+                    isFirstRow = false;
+                    return; // Skip first row
+                }
+                data.push(transformRow(row));
+            })
+            .on('end', () => resolve(data))
+            .on('error', (error) => reject(error));
+    });
+}
 
-  // Dynamic middle pages
-  if (this.currentPage > 5) {
-    pages.push('...');
-  }
+async function convertToJSON() {
+    try {
+        const organizations = await readCSV(parentOrgFile);
+        const contracts = await readCSV(contactNumFile);
+        const errorCodes = await readCSV(errorCodesFile, (row) => ({
+            code: row["CLM_ENCTR_ERR_CD"],
+            description: row["CLM_ENCTR_ERR_DESC"]
+        }));
 
-  // Determine dynamic window of pages
-  let start = Math.max(3, this.currentPage - 2);
-  let end = Math.min(total - 3, this.currentPage + 2);
+        const result = {
+            organization: organizations,
+            contract: contracts,
+            errorCodes: errorCodes
+        };
 
-  for (let i = start; i <= end; i++) {
-    pages.push(i);
-  }
+        fs.writeFileSync(outputFile, JSON.stringify(result, null, 2));
+        console.log(`JSON file created: ${outputFile}`);
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
 
-  // Show trailing ellipsis if needed
-  if (this.currentPage < total - 6) {
-    pages.push('...');
-  }
-
-  // Always show the last two pages
-  pages.push(total - 2, total - 1);
-
-  return pages;
+convertToJSON();
