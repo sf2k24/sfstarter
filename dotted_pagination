@@ -1,15 +1,10 @@
-<mat-accordion>
-  <mat-expansion-panel #panel>
-    <mat-expansion-panel-header>
-      <mat-panel-title>
-        My Panel
-      </mat-panel-title>
+var formatted = pairs.map(function(pair) {
+  var parts = pair.split(":");
+  if (parts.length === 2) {
+    return "<b>" + parts[0].trim() + "</b>: " + parts[1].trim();
+  }
+  return pair; // fallback for malformed data
+});
 
-      <!-- Icon that toggles between + and - -->
-      <mat-icon class="toggle-icon" *ngIf="!panel.expanded">add</mat-icon>
-      <mat-icon class="toggle-icon" *ngIf="panel.expanded">remove</mat-icon>
-    </mat-expansion-panel-header>
-
-    <p>This is the panel content.</p>
-  </mat-expansion-panel>
-</mat-accordion>
+// Join the formatted pairs back together
+var result = formatted.join("; ");
