@@ -1,49 +1,15 @@
-const fs = require('fs');
-const csv = require('csv-parser');
+<mat-accordion>
+  <mat-expansion-panel #panel>
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        My Panel
+      </mat-panel-title>
 
-const parentOrgFile = 'parent_organization.csv';
-const contactNumFile = 'contact_num.csv';
-const errorCodesFile = 'error_codes.csv';
-const outputFile = 'output.json';
+      <!-- Icon that toggles between + and - -->
+      <mat-icon class="toggle-icon" *ngIf="!panel.expanded">add</mat-icon>
+      <mat-icon class="toggle-icon" *ngIf="panel.expanded">remove</mat-icon>
+    </mat-expansion-panel-header>
 
-function readCSV(filePath, transformRow = (row) => row) {
-    return new Promise((resolve, reject) => {
-        const data = [];
-        let isFirstRow = true;
-        fs.createReadStream(filePath)
-            .pipe(csv())
-            .on('data', (row) => {
-                if (isFirstRow) {
-                    isFirstRow = false;
-                    return; // Skip first row
-                }
-                data.push(transformRow(row));
-            })
-            .on('end', () => resolve(data))
-            .on('error', (error) => reject(error));
-    });
-}
-
-async function convertToJSON() {
-    try {
-        const organizations = await readCSV(parentOrgFile);
-        const contracts = await readCSV(contactNumFile);
-        const errorCodes = await readCSV(errorCodesFile, (row) => ({
-            code: row["CLM_ENCTR_ERR_CD"],
-            description: row["CLM_ENCTR_ERR_DESC"]
-        }));
-
-        const result = {
-            organization: organizations,
-            contract: contracts,
-            errorCodes: errorCodes
-        };
-
-        fs.writeFileSync(outputFile, JSON.stringify(result, null, 2));
-        console.log(`JSON file created: ${outputFile}`);
-    } catch (error) {
-        console.error('Error:', error);
-    }
-}
-
-convertToJSON();
+    <p>This is the panel content.</p>
+  </mat-expansion-panel>
+</mat-accordion>
