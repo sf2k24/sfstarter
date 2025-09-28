@@ -1,22 +1,23 @@
-// Merge lines starting with "-"
-  const merged: string[] = [];
-  for (const line of disputeFlagsSample) {
-    if (line.trim().startsWith("-")) {
-      merged[merged.length - 1] += " " + line.trim();
-    } else {
-      merged.push(line);
-    }
-  }
+```javascript
 
-  // Build lookup
-  const map: Record<string, string> = {};
-  for (const item of merged) {
-    const [num, ...desc] = item.split(":");
-    map[num.trim()] = desc.join(":").trim();
-  }
+const map = {};
+let currentFlag = "";
 
-  // Pick only selected flags
-  this.flagStrings = {};
-  disputeFlags?.forEach(f => {
-    if (map[f]) this.flagStrings[f] = map[f];
-  });
+for (const line of disputeFlagsSample) {
+  if (/^\d+:/.test(line)) {
+    // Update current flag number
+    currentFlag = line.split(":")[0].trim();
+  } else if (line.trim().startsWith("-") && currentFlag) {
+    // Map only "-" lines
+    map[currentFlag] = line.trim();
+  }
+}
+
+// Pick only requested flags
+this.flagStrings = {};
+disputeFlags?.forEach(f => {
+  if (map[f]) this.flagStrings[f] = map[f];
+});
+
+console.log("this.flagStrings", this.flagStrings);
+```
